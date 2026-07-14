@@ -15,7 +15,32 @@ test("shows the server-calculated urgency label in the ticket list", async ({
   await expect(ticketRow).toContainText("prioritario");
 });
 
-test.fixme(
-  "", // potete inserire alta + telefono
-  async () => { }
-);
+test("alta + telefono -> intervento rapido nella riga creata", async ({
+  page
+}) => {
+  const ticketTitle = "Blocco accesso VPN cliente Gamma";
+
+  await page.goto("/");
+  await page.getByLabel("Titolo").fill(ticketTitle);
+  await page.getByLabel("Cliente").fill("Gamma S.r.l.");
+  await page
+    .getByRole("group", { name: "Priorita'" })
+    .getByRole("radio", { name: "alta", exact: true })
+    .check();
+  await page
+    .getByRole("group", { name: "Canale richiesta" })
+    .getByRole("radio", { name: "telefono", exact: true })
+    .check();
+  await page.getByRole("button", { name: "Salva ticket" }).click();
+
+  const ticketRow = page.getByRole("row").filter({ hasText: ticketTitle });
+
+  await expect(ticketRow).toHaveCount(1);
+  await expect(ticketRow.getByText("alta", { exact: true })).toBeVisible();
+  await expect(
+    ticketRow.getByText("telefono", { exact: true })
+  ).toBeVisible();
+  await expect(
+    ticketRow.getByText("intervento rapido", { exact: true })
+  ).toBeVisible();
+});
